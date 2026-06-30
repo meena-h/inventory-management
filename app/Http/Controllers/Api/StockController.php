@@ -169,6 +169,46 @@ class StockController extends Controller
         }
     }
 
+    // GET /api/stocks/{product_id}/current
+public function currentStockByProduct($product_id)
+{
+    try {
+        // Check if product exists first
+        $product = Product::find($product_id);
+
+        if (! $product) {
+            return response()->json(['message' => 'Product not found'], 404);
+        }
+
+        $stock = CurrentStock::with('product:id,product_code,name,unit,low_stock_threshold')
+            ->where('product_id', $product_id)
+            ->first();
+
+        if (! $stock) {
+            return response()->json(['message' => 'No stock record found for this product'], 404);
+        }
+
+        return response()->json([
+            'stock' => [
+                'product_id'          => $stock->product_id,
+                'product_code'        => $stock->product->product_code,
+                'product_name'        => $stock->product->name,
+                'unit'                => $stock->product->unit,
+                'current_stock'       => $stock->current_stock,
+                'low_stock_threshold' => $stock->product->low_stock_threshold,
+                'is_low_stock'        => $stock->current_stock <= $stock->product->low_stock_threshold,
+                'last_updated'        => $stock->updated_at,
+            ],
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Something went wrong',
+            'error'   => $e->getMessage(),
+        ], 500);
+    }
+}
+
     // POST /api/stocks/out — Remove stock out
 public function stockOut(Request $request)
 {

@@ -12,7 +12,7 @@ class CategoryController extends Controller
         public function index()
     {
         try {
-            $categories = Category::latest()->get(); // 👈 removed withCount
+            $categories = Category::latest()->get();
 
             return response()->json([
                 'total'      => $categories->count(),
@@ -104,6 +104,7 @@ class CategoryController extends Controller
     }
 
     // DELETE /api/categories/{id}
+   // DELETE /api/categories/{id}
     public function destroy($id)
     {
         $category = Category::find($id);
@@ -117,7 +118,13 @@ class CategoryController extends Controller
 
             return response()->json(['message' => 'Category deleted successfully']);
 
-        } catch (\Exception $e) {
+        } catch (\Illuminate\Database\QueryException $e) {
+            if ($e->getCode() === '23000') {
+                return response()->json([
+                    'message' => 'This category cannot be deleted because it has products linked to it. Please remove or reassign the products first.',
+                ], 409);
+            }
+
             return response()->json([
                 'message' => 'Something went wrong',
                 'error'   => $e->getMessage(),

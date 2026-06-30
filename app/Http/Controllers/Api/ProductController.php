@@ -9,12 +9,35 @@ use Illuminate\Http\Request;
 class ProductController extends Controller
 {
     // GET /api/products
-    public function index()
+    // GET /api/products?category_id=2         
+    // GET /api/products?grouped=true          
+    // GET /api/products?category_id=2&grouped=true 
+    public function index(Request $request)
     {
         try {
-            $products = Product::with(['category', 'suppliers'])
-                ->latest()
-                ->get();
+            $query = Product::with(['category', 'suppliers'])->latest();
+
+            if ($request->filled('category_id')) {
+                $query->where('category_id', $request->category_id);
+            }
+
+            $products = $query->get();
+
+            if ($request->boolean('grouped')) {
+                $grouped = $products
+                    ->groupBy(fn($product) => $product->category->name ?? 'Uncategorized')
+                    ->map(fn($items, $categoryName) => [
+                        'category' => $categoryName,
+                        'total'    => $items->count(),
+                        'products' => $items->values(),
+                    ])
+                    ->values();
+
+                return response()->json([
+                    'total'      => $products->count(),
+                    'categories' => $grouped,
+                ]);
+            }
 
             return response()->json([
                 'total'    => $products->count(),
@@ -131,25 +154,33 @@ class ProductController extends Controller
     }
 
     // DELETE /api/products/{id}
-    public function destroy($id)
-    {
-        $product = Product::find($id);
+    // DELETE /api/products/{id}
+public function destroy($id)
+{
+    $product = Product::find($id);
 
-        if (! $product) {
-            return response()->json(['message' => 'Product not found'], 404);
-        }
-
-        try {
-            $product->suppliers()->detach();
-            $product->delete();
-
-            return response()->json(['message' => 'Product deleted successfully']);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Something went wrong',
-                'error'   => $e->getMessage(),
-            ], 500);
-        }
+    if (! $product) {
+        return response()->json(['message' => 'Product not found'], 404);
     }
+
+    try {
+        $product->suppliers()->detach();
+        $product->delete();
+
+        return response()->json(['message' => 'Product deleted successfully']);
+
+    } catch (\Illuminate\Database\QueryException $e) {
+        // Foreign key constraint violation error code
+        if ($e->getCode() === '23000') {
+            return response()->json([
+                'message' => 'This product cannot be deleted because it is linked to existing stock or order records. Please remove the related records first.',
+            ], 409); // 409 Conflict
+        }
+
+        return response()->json([
+            'message' => 'Something went wrong',
+            'error'   => $e->getMessage(),
+        ], 500);
+    }
+}
 }

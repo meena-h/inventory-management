@@ -33,10 +33,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/stocks/current',             [StockController::class, 'currentStock']);
     Route::get('/stocks/low',                 [StockController::class, 'lowStock']);
     Route::get('/stocks/{product_id}/history',[StockController::class, 'history']);
+    Route::get('/stocks/{product_id}/current', [StockController::class, 'currentStockByProduct']);
+
     Route::post('/stocks/in',                 [StockController::class, 'stockIn']);
     Route::post('/stocks/out', [StockController::class, 'stockOut']); 
+
+
     Route::get('/purchase-orders',      [PurchaseOrderController::class, 'index']);
     Route::get('/purchase-orders/{id}', [PurchaseOrderController::class, 'show']);
+
+    
 
     Route::get('/reports/master',          [ReportController::class, 'master']);
     Route::get('/reports/stock-movements', [ReportController::class, 'stockMovements']);
