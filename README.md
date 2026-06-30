@@ -1,59 +1,160 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Inventory Management System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel 12 REST API for managing inventory including products, suppliers, stock tracking, purchase orders and reports.
 
-## About Laravel
+## Requirements
+- PHP 8.2+
+- Composer
+- MySQL
+- XAMPP or any local server
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Setup Instructions
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### 1. Clone the repository
+```bash
+git clone https://github.com/meena-h/inventory-management.git
+cd inventory-management
+```
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 2. Install dependencies
+```bash
+composer install
+```
 
-## Learning Laravel
+### 3. Create environment file
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### 4. Configure database
+Open `.env` and update:
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=inventory_management
+DB_USERNAME=root
+DB_PASSWORD=
 
-## Laravel Sponsors
+### 5. Run migrations
+```bash
+php artisan migrate
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 6. Start the server
+```bash
+php artisan serve
+```
 
-### Premium Partners
+API is now running at `http://127.0.0.1:8000`
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## Roles
+| Role | Access |
+|------|--------|
+| Admin | Full access — manage products, categories, suppliers, purchase orders |
+| Staff | Stock in/out and view reports |
 
-## Contributing
+## API Endpoints
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Auth
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| POST | /api/register | Public |
+| POST | /api/login | Public |
+| GET | /api/profile | All |
+| POST | /api/logout | All |
 
-## Code of Conduct
+### Categories
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| GET | /api/categories | All |
+| GET | /api/categories/{id} | All |
+| POST | /api/categories | Admin |
+| PUT | /api/categories/{id} | Admin |
+| DELETE | /api/categories/{id} | Admin |
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Suppliers
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| GET | /api/suppliers | All |
+| GET | /api/suppliers/{id} | All |
+| POST | /api/suppliers | Admin |
+| PUT | /api/suppliers/{id} | Admin |
+| DELETE | /api/suppliers/{id} | Admin |
 
-## Security Vulnerabilities
+### Products
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| GET | /api/products | All |
+| GET | /api/products/{id} | All |
+| POST | /api/products | Admin |
+| PUT | /api/products/{id} | Admin |
+| DELETE | /api/products/{id} | Admin |
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Stock
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| POST | /api/stocks/in | All |
+| POST | /api/stocks/out | All |
+| GET | /api/stocks/current | All |
+| GET | /api/stocks/low | All |
+| GET | /api/stocks/{product_id}/history | All |
 
-## License
+### Purchase Orders
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| GET | /api/purchase-orders | All |
+| GET | /api/purchase-orders/{id} | All |
+| POST | /api/purchase-orders | Admin |
+| PUT | /api/purchase-orders/{id}/receive | Admin |
+| PUT | /api/purchase-orders/{id}/cancel | Admin |
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Reports
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| GET | /api/reports/master | All |
+| GET | /api/reports/stock-movements | All |
+| GET | /api/reports/stock-at-date | All |
+
+## Process Flow
+
+Supplier
+↓
+Purchase Order Created (status: pending)
+↓
+Purchase Order Marked as Received (status: received)
+↓
+Stock Automatically Added (stock_transactions + current_stocks updated)
+↓
+Manual Stock Out when items are used
+↓
+Reports show full movement history
+
+## Stock Rules
+- Stock can never go below 0
+- Every movement is logged in stock_transactions
+- current_stocks table maintains latest stock for fast reads
+- Receiving a purchase order auto triggers stock in
+
+## Auto Generated Codes
+| Field | Format | Example |
+|-------|--------|---------|
+| category_code | CAT-XXXX | CAT-0001 |
+| supplier_code | SUP-XXXX | SUP-0001 |
+| product_code | PROD-XXXX | PROD-0001 |
+| sku | SKU-XXXX | SKU-0001 |
+| order_code | PO-XXXX | PO-0001 |
+
+## Database Schema
+| Table | Description |
+|-------|-------------|
+| users | Admin and staff accounts |
+| categories | Product categories with category_code |
+| suppliers | Product suppliers with supplier_code |
+| products | Inventory items with product_code and sku |
+| product_supplier | Many-to-many pivot between products and suppliers |
+| stock_transactions | Full log of all stock in/out movements |
+| current_stocks | Latest stock quantity per product |
+| purchase_orders | Orders raised from suppliers |
+| purchase_order_products | Line items in each purchase order |
