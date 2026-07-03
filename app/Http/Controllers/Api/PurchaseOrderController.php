@@ -8,6 +8,7 @@ use App\Models\PurchaseOrder;
 use App\Models\StockTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Enums\PurchaseOrderStatus;
 
 class PurchaseOrderController extends Controller
 {
@@ -59,7 +60,7 @@ class PurchaseOrderController extends Controller
             $order = PurchaseOrder::create([
                 'supplier_id'  => $validated['supplier_id'],
                 'user_id'      => $request->user()->id,
-                'status'       => 'pending',
+                'status'       => PurchaseOrderStatus::PENDING,
                 'total_amount' => $totalAmount,
                 'ordered_at'   => $validated['ordered_at'],
                 'note'         => $validated['note'] ?? null,
@@ -123,11 +124,11 @@ class PurchaseOrderController extends Controller
             return response()->json(['message' => 'Purchase order not found'], 404);
         }
 
-        if ($order->status === 'received') {
+        if ($order->status === PurchaseOrderStatus::RECEIVED) {
             return response()->json(['message' => 'Order already received'], 422);
         }
 
-        if ($order->status === 'cancelled') {
+        if ($order->status === PurchaseOrderStatus::CANCELLED) {
             return response()->json(['message' => 'Cannot receive a cancelled order'], 422);
         }
 
@@ -136,7 +137,7 @@ class PurchaseOrderController extends Controller
 
             // Mark order as received
             $order->update([
-                'status'      => 'received',
+                'status' => PurchaseOrderStatus::RECEIVED,
                 'received_at' => now()->toDateString(),
             ]);
 
@@ -147,7 +148,7 @@ class PurchaseOrderController extends Controller
                     'product_id'       => $item->product_id,
                     'user_id'          => $request->user()->id,
                     'transaction_date' => now()->toDateString(),
-                    'type'             => 'in',
+                    'type'             => StockTransactionType::IN,
                     'quantity'         => $item->quantity,
                     'note'             => 'Auto stock in from Purchase Order ' . $order->order_code,
                 ]);
@@ -197,16 +198,16 @@ class PurchaseOrderController extends Controller
             return response()->json(['message' => 'Purchase order not found'], 404);
         }
 
-        if ($order->status === 'received') {
+        if ($order->status === PurchaseOrderStatus::RECEIVED) {
             return response()->json(['message' => 'Cannot cancel a received order'], 422);
         }
 
-        if ($order->status === 'cancelled') {
+        if ($order->status === PurchaseOrderStatus::CANCELLED) {
             return response()->json(['message' => 'Order already cancelled'], 422);
         }
 
         try {
-            $order->update(['status' => 'cancelled']);
+            $order->update(['status' => PurchaseOrderStatus::CANCELLED]);
 
             return response()->json([
                 'message' => 'Purchase order cancelled successfully',

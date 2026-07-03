@@ -91,16 +91,12 @@ class ProductController extends Controller
 
     // GET /api/products/{id}
     // GET /api/products/{id}
-    public function show($id)
+    public function show(Product $product)
     {
         try {
-            $product = Product::with(['category', 'suppliers'])->find($id); 
-
-            if (! $product) {
-                return response()->json(['message' => 'Product not found'], 404);
-            }
-
-            return response()->json(['product' => $product]);
+            return response()->json([
+                'product' => $product->load(['category', 'suppliers']),
+            ]);
 
         } catch (\Exception $e) {
             return response()->json([
@@ -111,19 +107,14 @@ class ProductController extends Controller
     }
 
     // PUT /api/products/{id}
-    public function update(Request $request, $id)
+    public function update(Request $request, Product $product)
     {
-        $product = Product::find($id);
-
-        if (! $product) {
-            return response()->json(['message' => 'Product not found'], 404);
-        }
-
+    
         $validated = $request->validate([
             'category_id'         => 'sometimes|exists:categories,id',
-            'name'                => 'sometimes|string|max:255|unique:products,name,' . $id,
+            'name'                => 'sometimes|string|max:255|unique:products,name,' . $product->id,
             'description'         => 'nullable|string',
-            'sku'                 => 'nullable|string|unique:products,sku,' . $id,
+            'sku'                 => 'nullable|string|unique:products,sku,' . $product->id,
             'unit'                => 'sometimes|string|max:50',
             'price'               => 'sometimes|numeric|min:0',
             'low_stock_threshold' => 'sometimes|integer|min:0',
@@ -155,14 +146,8 @@ class ProductController extends Controller
 
     // DELETE /api/products/{id}
     // DELETE /api/products/{id}
-public function destroy($id)
+public function destroy(Product $product)
 {
-    $product = Product::find($id);
-
-    if (! $product) {
-        return response()->json(['message' => 'Product not found'], 404);
-    }
-
     try {
         $product->suppliers()->detach();
         $product->delete();

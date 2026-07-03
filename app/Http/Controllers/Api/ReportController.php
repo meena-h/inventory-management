@@ -7,6 +7,8 @@ use App\Models\CurrentStock;
 use App\Models\Product;
 use App\Models\StockTransaction;
 use Illuminate\Http\Request;
+use App\Enums\StockTransactionType;
+use Illuminate\Validation\Rules\Enum;
 
 class ReportController extends Controller
 {
@@ -56,7 +58,7 @@ class ReportController extends Controller
     {
         $request->validate([
             'product_id' => 'sometimes|exists:products,id',
-            'type'       => 'sometimes|in:in,out',
+            'type' => ['sometimes', new Enum(StockTransactionType::class)],
             'from_date'  => 'sometimes|date',
             'to_date'    => 'sometimes|date|after_or_equal:from_date',
             'per_page'   => 'sometimes|integer|min:1|max:100',

@@ -28,7 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/suppliers/{id}', [SupplierController::class, 'show']);
 
     Route::get('/products',      [ProductController::class, 'index']);
-    Route::get('/products/{id}', [ProductController::class, 'show']);
+    Route::get('/products/{product}', [ProductController::class, 'show']);
 
     Route::get('/stocks/current',             [StockController::class, 'currentStock']);
     Route::get('/stocks/low',                 [StockController::class, 'lowStock']);
@@ -63,8 +63,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Products
         Route::post('/products',        [ProductController::class, 'store']);
-        Route::put('/products/{id}',    [ProductController::class, 'update']);
-        Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+        Route::put('/products/{product}',    [ProductController::class, 'update']);
+        Route::delete('/products/{product}', [ProductController::class, 'destroy']);
 
         Route::post('/purchase-orders',              [PurchaseOrderController::class, 'store']);
         Route::put('/purchase-orders/{id}/receive',  [PurchaseOrderController::class, 'receive']);

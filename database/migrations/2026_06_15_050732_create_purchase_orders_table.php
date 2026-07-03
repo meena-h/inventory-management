@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('supplier_id')->constrained()->onDelete('restrict');
             $table->foreignId('user_id')->constrained()->onDelete('restrict');
             $table->string('order_code')->unique();
-            $table->enum('status', ['pending', 'received', 'cancelled'])->default('pending');
+            $table->string('status')->default('pending');
             $table->decimal('total_amount', 10, 2)->default(0);
             $table->date('ordered_at');
             $table->date('received_at')->nullable();

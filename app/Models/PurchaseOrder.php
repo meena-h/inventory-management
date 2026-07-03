@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Enums\PurchaseOrderStatus;
 
 class PurchaseOrder extends Model
 {
@@ -24,6 +25,7 @@ class PurchaseOrder extends Model
         'ordered_at'   => 'date',
         'received_at'  => 'date',
         'total_amount' => 'float',
+        'status'       => PurchaseOrderStatus::class,
     ];
 
     // Auto generate order_code

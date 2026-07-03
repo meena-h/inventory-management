@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('product_id')->constrained()->onDelete('restrict');
             $table->foreignId('user_id')->constrained()->onDelete('restrict');
             $table->date('transaction_date');
-            $table->enum('type', ['in', 'out']);
+            $table->string('type');
             $table->integer('quantity');
             $table->text('note')->nullable();
             $table->timestamps();

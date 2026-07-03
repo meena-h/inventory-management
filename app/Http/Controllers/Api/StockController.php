@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\StockTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Enums\StockTransactionType;
 
 class StockController extends Controller
 {
@@ -29,7 +30,7 @@ class StockController extends Controller
                 'product_id'       => $validated['product_id'],
                 'user_id'          => $request->user()->id,
                 'transaction_date' => $validated['transaction_date'],
-                'type'             => 'in',
+                'type'             => StockTransactionType::IN,
                 'quantity'         => $validated['quantity'],
                 'note'             => $validated['note'] ?? null,
             ]);
@@ -237,7 +238,7 @@ public function stockOut(Request $request)
             'product_id'       => $validated['product_id'],
             'user_id'          => $request->user()->id,
             'transaction_date' => $validated['transaction_date'],
-            'type'             => 'out',
+            'type'             => StockTransactionType::OUT,
             'quantity'         => $validated['quantity'],
             'note'             => $validated['note'] ?? null,
         ]);

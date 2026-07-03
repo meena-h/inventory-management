@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Enums\StockTransactionType;
 
 class StockTransaction extends Model
 {
@@ -21,6 +22,7 @@ class StockTransaction extends Model
     protected $casts = [
         'transaction_date' => 'date',
         'quantity'         => 'integer',
+        'type'             => StockTransactionType::class,
     ];
 
     // Belongs to a product
