@@ -12,7 +12,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('category_id')->constrained()->onDelete('restrict');
             $table->string('product_code')->unique();
-            $table->string('name')->unique();
+            $table->string('name');
+            $table->string('slug')->unique();
             $table->text('description')->nullable();
             $table->string('sku')->unique();
             $table->string('unit')->default('pcs');

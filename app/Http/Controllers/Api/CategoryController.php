@@ -4,7 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreCategoryRequest;
+use App\Http\Requests\UpdateCategoryRequest;
 
 class CategoryController extends Controller
 {
@@ -28,13 +29,9 @@ class CategoryController extends Controller
     }
 
     // POST /api/categories
-    public function store(Request $request)
+    public function store(StoreCategoryRequest $request)
     {
-        $validated = $request->validate([
-            'name'        => 'required|string|max:255|unique:categories,name',
-            'description' => 'nullable|string|max:1000',
-            'is_active'   => 'sometimes|boolean',
-        ]);
+        $validated = $request->validated();
 
         try {
             $category = Category::create($validated);
@@ -53,16 +50,12 @@ class CategoryController extends Controller
     }
 
     // GET /api/categories/{id}
-        public function show($id)
+        public function show(Category $category)
     {
         try {
-            $category = Category::find($id); // 👈 removed withCount
-
-            if (! $category) {
-                return response()->json(['message' => 'Category not found'], 404);
-            }
-
-            return response()->json(['category' => $category]);
+            return response()->json([
+                'category' => $category,
+            ]);
 
         } catch (\Exception $e) {
             return response()->json([
@@ -73,19 +66,10 @@ class CategoryController extends Controller
     }
 
     // PUT /api/categories/{id}
-    public function update(Request $request, $id)
+    public function update(UpdateCategoryRequest $request, Category $category)
     {
-        $category = Category::find($id);
 
-        if (! $category) {
-            return response()->json(['message' => 'Category not found'], 404);
-        }
-
-        $validated = $request->validate([
-            'name'        => 'sometimes|string|max:255|unique:categories,name,' . $id,
-            'description' => 'nullable|string|max:1000',
-            'is_active'   => 'sometimes|boolean',
-        ]);
+        $validated = $request->validated();
 
         try {
             $category->update($validated);
@@ -104,15 +88,8 @@ class CategoryController extends Controller
     }
 
     // DELETE /api/categories/{id}
-   // DELETE /api/categories/{id}
-    public function destroy($id)
+    public function destroy(Category $category)
     {
-        $category = Category::find($id);
-
-        if (! $category) {
-            return response()->json(['message' => 'Category not found'], 404);
-        }
-
         try {
             $category->delete();
 
@@ -128,6 +105,14 @@ class CategoryController extends Controller
             return response()->json([
                 'message' => 'Something went wrong',
                 'error'   => $e->getMessage(),
+            ], 500);
+
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'message' => 'Something went wrong',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }

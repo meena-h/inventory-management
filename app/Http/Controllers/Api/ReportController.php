@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\CurrentStock;
 use App\Models\Product;
 use App\Models\StockTransaction;
 use Illuminate\Http\Request;
@@ -68,44 +67,37 @@ class ReportController extends Controller
             $query = StockTransaction::with([
                 'product:id,product_code,name,unit',
                 'user:id,name',
-            ]);
+            ])
+            ->when($request->filled('product_id'), fn ($q) =>
+                $q->where('product_id', $request->product_id)
+            )
+            ->when($request->filled('type'), fn ($q) =>
+                $q->where('type', $request->type)
+            )
+            ->when($request->filled('from_date'), fn ($q) =>
+                $q->where('transaction_date', '>=', $request->from_date)
+            )
+            ->when($request->filled('to_date'), fn ($q) =>
+                $q->where('transaction_date', '<=', $request->to_date)
+            );
 
-            // Filter by product
-            if ($request->filled('product_id')) {
-                $query->where('product_id', $request->product_id);
-            }
+            $summaryTransactions = (clone $query)->get();
 
-            // Filter by type
-            if ($request->filled('type')) {
-                $query->where('type', $request->type);
-            }
+            $summary = [
+                'total_in' => $summaryTransactions
+                    ->where('type', StockTransactionType::IN)
+                    ->sum('quantity'),
 
-            // Filter by date range
-            if ($request->filled('from_date')) {
-                $query->where('transaction_date', '>=', $request->from_date);
-            }
+                'total_out' => $summaryTransactions
+                    ->where('type', StockTransactionType::OUT)
+                    ->sum('quantity'),
+            ];
 
-            if ($request->filled('to_date')) {
-                $query->where('transaction_date', '<=', $request->to_date);
-            }
-
+            // Pagination
             $query->latest('transaction_date');
 
-            $perPage      = $request->input('per_page', 10);
+            $perPage = $request->input('per_page', 10);
             $transactions = $query->paginate($perPage);
-
-            // Summary
-            $summary = [
-                'total_in'  => StockTransaction::when($request->product_id, fn($q) => $q->where('product_id', $request->product_id))
-                    ->when($request->from_date, fn($q) => $q->where('transaction_date', '>=', $request->from_date))
-                    ->when($request->to_date, fn($q) => $q->where('transaction_date', '<=', $request->to_date))
-                    ->where('type', 'in')->sum('quantity'),
-
-                'total_out' => StockTransaction::when($request->product_id, fn($q) => $q->where('product_id', $request->product_id))
-                    ->when($request->from_date, fn($q) => $q->where('transaction_date', '>=', $request->from_date))
-                    ->when($request->to_date, fn($q) => $q->where('transaction_date', '<=', $request->to_date))
-                    ->where('type', 'out')->sum('quantity'),
-            ];
 
             return response()->json([
                 'summary'      => $summary,
@@ -137,16 +129,17 @@ class ReportController extends Controller
         try {
             $product = Product::find($request->product_id);
 
-            // Sum all 'in' transactions up to that date
-            $totalIn = StockTransaction::where('product_id', $request->product_id)
-                ->where('type', 'in')
+            // all transactions in/out up to that date
+            $transactions  = StockTransaction::where('product_id', $request->product_id)
                 ->where('transaction_date', '<=', $request->date)
+                ->get();
+
+            $totalIn = $transactions
+                ->where('type', StockTransactionType::IN)
                 ->sum('quantity');
 
-            // Sum all 'out' transactions up to that date
-            $totalOut = StockTransaction::where('product_id', $request->product_id)
-                ->where('type', 'out')
-                ->where('transaction_date', '<=', $request->date)
+            $totalOut = $transactions
+                ->where('type', StockTransactionType::OUT)
                 ->sum('quantity');
 
             $stockAtDate = $totalIn - $totalOut;
