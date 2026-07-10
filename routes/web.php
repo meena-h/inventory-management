@@ -34,8 +34,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/products/{product}', [ProductController::class, 'destroy']);
 
         // Stock
-        Route::post('/stocks/in', [StockController::class, 'stockIn']);
-        Route::post('/stocks/out', [StockController::class, 'stockOut']);
+        Route::post('/products/stock-out', [StockController::class, 'stockOut']);
 
         // Purchase Orders
         Route::post('/purchase-orders', [PurchaseOrderController::class, 'store']);

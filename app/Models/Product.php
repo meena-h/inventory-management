@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Product extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
         'category_id',
@@ -18,6 +20,7 @@ class Product extends Model
         'sku',
         'unit',
         'price',
+        'current_stock', 
         'low_stock_threshold',
         'is_active',
     ];
@@ -62,9 +65,4 @@ class Product extends Model
         return $this->hasMany(StockTransaction::class);
     }
 
-    // Has one current stock
-    public function currentStock()
-    {
-        return $this->hasOne(CurrentStock::class);
-    }
 }

@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Enums\StockTransactionType;
-use App\Models\CurrentStock;
 use App\Models\Product;
 use App\Models\StockTransaction;
 use App\Models\User;
@@ -11,63 +10,32 @@ use Illuminate\Support\Facades\DB;
 
 class StockService
 {
-    /**
-     * Stock In
-     */
-    public function stockIn(array $validated, User $user)
-    {
-        DB::beginTransaction();
-
-        try {
-
-            $transaction = StockTransaction::create([
-                'product_id'       => $validated['product_id'],
-                'user_id'          => $user->id,
-                'transaction_date' => $validated['transaction_date'],
-                'type'             => StockTransactionType::IN,
-                'quantity'         => $validated['quantity'],
-                'note'             => $validated['note'] ?? null,
-            ]);
-
-            $currentStock = CurrentStock::firstOrCreate(
-                ['product_id' => $validated['product_id']],
-                ['current_stock' => 0]
-            );
-
-            $currentStock->increment('current_stock', $validated['quantity']);
-
-            DB::commit();
-
-            return [
-                'transaction'   => $transaction->load('product', 'user'),
-                'current_stock' => $currentStock->fresh(),
-            ];
-
-        } catch (\Exception $e) {
-
-            DB::rollBack();
-
-            throw $e;
-        }
-    }
 
     /**
      * Current Stock
      */
     public function currentStock()
     {
-        return CurrentStock::with('product:id,product_code,name,unit,low_stock_threshold')
+        return Product::select(
+                'id',
+                'product_code',
+                'name',
+                'unit',
+                'current_stock',
+                'low_stock_threshold',
+                'updated_at'
+            )
             ->get()
-            ->map(function ($stock) {
+            ->map(function ($product) {
                 return [
-                    'product_id'          => $stock->product_id,
-                    'product_code'        => $stock->product->product_code,
-                    'product_name'        => $stock->product->name,
-                    'unit'                => $stock->product->unit,
-                    'current_stock'       => $stock->current_stock,
-                    'low_stock_threshold' => $stock->product->low_stock_threshold,
-                    'is_low_stock'        => $stock->current_stock <= $stock->product->low_stock_threshold,
-                    'last_updated'        => $stock->updated_at,
+                    'product_id' => $product->id,
+                    'product_code' => $product->product_code,
+                    'product_name' => $product->name,
+                    'unit' => $product->unit,
+                    'current_stock' => $product->current_stock,
+                    'low_stock_threshold' => $product->low_stock_threshold,
+                    'is_low_stock' => $product->current_stock <= $product->low_stock_threshold,
+                    'last_updated' => $product->updated_at,
                 ];
             });
     }
@@ -77,23 +45,20 @@ class StockService
      */
     public function lowStock()
     {
-        return CurrentStock::with('product:id,product_code,name,unit,low_stock_threshold')
-            ->get()
-            ->filter(function ($stock) {
-                return $stock->current_stock <= $stock->product->low_stock_threshold;
-            })
-            ->map(function ($stock) {
-                return [
-                    'product_id'          => $stock->product_id,
-                    'product_code'        => $stock->product->product_code,
-                    'product_name'        => $stock->product->name,
-                    'unit'                => $stock->product->unit,
-                    'current_stock'       => $stock->current_stock,
-                    'low_stock_threshold' => $stock->product->low_stock_threshold,
-                    'shortage'            => $stock->product->low_stock_threshold - $stock->current_stock,
-                ];
-            })
-            ->values();
+        return Product::whereColumn('current_stock', '<=', 'low_stock_threshold')
+        ->get()
+        ->map(function ($product) {
+            return [
+                'product_id' => $product->id,
+                'product_code' => $product->product_code,
+                'product_name' => $product->name,
+                'unit' => $product->unit,
+                'current_stock' => $product->current_stock,
+                'low_stock_threshold' => $product->low_stock_threshold,
+                'shortage' => $product->low_stock_threshold - $product->current_stock,
+            ];
+        })
+        ->values();
     }
 
     /**
@@ -106,8 +71,6 @@ class StockService
             ->latest()
             ->get();
 
-        $currentStock = CurrentStock::where('product_id', $product->id)->first();
-
         return [
             'product' => [
                 'id'           => $product->id,
@@ -115,36 +78,12 @@ class StockService
                 'name'         => $product->name,
                 'unit'         => $product->unit,
             ],
-            'current_stock' => $currentStock?->current_stock ?? 0,
+            'current_stock' => $product->current_stock,
             'total_transactions' => $transactions->count(),
             'transactions' => $transactions,
         ];
     }
 
-    /**
-     * Current Stock By Product
-     */
-    public function currentStockByProduct(Product $product)
-    {
-        $stock = CurrentStock::with('product:id,product_code,name,unit,low_stock_threshold')
-            ->where('product_id', $product->id)
-            ->first();
-
-        if (!$stock) {
-            return null;
-        }
-
-        return [
-            'product_id'          => $stock->product_id,
-            'product_code'        => $stock->product->product_code,
-            'product_name'        => $stock->product->name,
-            'unit'                => $stock->product->unit,
-            'current_stock'       => $stock->current_stock,
-            'low_stock_threshold' => $stock->product->low_stock_threshold,
-            'is_low_stock'        => $stock->current_stock <= $stock->product->low_stock_threshold,
-            'last_updated'        => $stock->updated_at,
-        ];
-    }
 
     /**
      * Stock Out
@@ -155,9 +94,9 @@ class StockService
 
         try {
 
-            $currentStock = CurrentStock::where('product_id', $validated['product_id'])->first();
+            $product = Product::findOrFail($validated['product_id']);
 
-            if (!$currentStock || $currentStock->current_stock < $validated['quantity']) {
+            if ($product->current_stock < $validated['quantity']) {
                 throw new \InvalidArgumentException('Insufficient stock.');
             }
 
@@ -170,13 +109,13 @@ class StockService
                 'note'             => $validated['note'] ?? null,
             ]);
 
-            $currentStock->decrement('current_stock', $validated['quantity']);
+            $product->decrement('current_stock', $validated['quantity']);
 
             DB::commit();
 
             return [
                 'transaction' => $transaction->load('product', 'user'),
-                'current_stock' => $currentStock->fresh()->current_stock,
+                'current_stock' => $product->fresh()->current_stock,
             ];
 
         } catch (\Exception $e) {

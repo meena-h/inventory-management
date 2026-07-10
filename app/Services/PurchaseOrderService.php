@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Enums\PurchaseOrderStatus;
 use App\Enums\StockTransactionType;
-use App\Models\CurrentStock;
 use App\Models\PurchaseOrder;
 use App\Models\StockTransaction;
 use App\Models\User;
@@ -84,7 +83,7 @@ class PurchaseOrderService
      */
     public function receive(PurchaseOrder $purchaseOrder, User $user)
     {
-        $purchaseOrder->load('products');
+        $purchaseOrder->load('products.product');
 
         if ($purchaseOrder->status === PurchaseOrderStatus::RECEIVED) {
             throw new \Exception('Order already received.');
@@ -113,17 +112,8 @@ class PurchaseOrderService
                     'quantity'         => $item->quantity,
                     'note'             => 'Auto stock in from Purchase Order ' . $purchaseOrder->order_code,
                 ]);
-
-                $currentStock = CurrentStock::firstOrCreate(
-                    [
-                        'product_id' => $item->product_id,
-                    ],
-                    [
-                        'current_stock' => 0,
-                    ]
-                );
-
-                $currentStock->increment('current_stock', $item->quantity);
+                
+                $item->product->increment('current_stock', $item->quantity);
             }
 
             DB::commit();

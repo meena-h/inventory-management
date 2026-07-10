@@ -18,6 +18,24 @@ class ProductService
             $query->where('category_id', $request->category_id);
         }
 
+        if ($request->filled('stock_status')) {
+
+            switch ($request->stock_status) {
+
+                case 'low':
+                    $query->whereColumn('current_stock', '<=', 'low_stock_threshold');
+                    break;
+
+                case 'in_stock':
+                    $query->where('current_stock', '>', 0);
+                    break;
+
+                case 'out_of_stock':
+                    $query->where('current_stock', 0);
+                    break;
+            }
+        }
+
         $products = $query->get();
 
         if ($request->boolean('grouped')) {

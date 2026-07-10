@@ -13,9 +13,11 @@ use Illuminate\Database\QueryException;
 class ProductController extends Controller
 {
     // GET /api/products
-    // GET /api/products?category_id=2         
-    // GET /api/products?grouped=true          
-    // GET /api/products?category_id=2&grouped=true
+    // GET /products?stock_status=low
+    // GET /products?stock_status=in_stock
+    // GET /products?stock_status=out_of_stock
+    // GET /products?category_id=1&stock_status=low
+    // GET /products?grouped=true&stock_status=low
     
      public function __construct(
         protected ProductService $productService

@@ -22,10 +22,9 @@ Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{product}', [ProductController::class, 'show']);
 
 // Stocks
-Route::get('/stocks/current', [StockController::class, 'currentStock']);
-Route::get('/stocks/low', [StockController::class, 'lowStock']);
-Route::get('/stocks/{product}/history', [StockController::class, 'history']);
-Route::get('/stocks/{product}/current', [StockController::class, 'currentStockByProduct']);
+Route::get('/products/current-stock', [StockController::class, 'currentStock']);
+Route::get('/products/low-stock', [StockController::class, 'lowStock']);
+Route::get('/products/{product}/transactions', [StockController::class, 'history']);
 
 // Purchase Orders
 Route::get('/purchase-orders', [PurchaseOrderController::class, 'index']);
