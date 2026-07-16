@@ -7,6 +7,8 @@ use App\Models\PurchaseOrder;
 use Illuminate\Http\Request;
 use App\Http\Requests\StorePurchaseOrderRequest;
 use App\Services\PurchaseOrderService;
+use App\Http\Resources\PurchaseOrderResource;
+use Illuminate\Support\Facades\DB;
 
 class PurchaseOrderController extends Controller
 {
@@ -22,8 +24,8 @@ class PurchaseOrderController extends Controller
             $orders = $this->purchaseOrderService->index();
 
             return response()->json([
-                'total'  => $orders->count(),
-                'orders' => $orders,
+                'total' => $orders->count(),
+                'orders' => PurchaseOrderResource::collection($orders),
             ]);
 
         } catch (\Exception $e) {
@@ -39,18 +41,24 @@ class PurchaseOrderController extends Controller
     public function store(StorePurchaseOrderRequest $request)
     {
         try {
+    
+            DB::beginTransaction();
 
             $order = $this->purchaseOrderService->store(
                 $request->validated(),
                 $request->user()
             );
 
+            DB::commit();
+
             return response()->json([
                 'message' => 'Purchase order created successfully',
-                'order' => $order,
-            ],201);
+                'order' => new PurchaseOrderResource($order),
+            ], 201);
 
         } catch (\Exception $e) {
+
+            DB::rollBack();
 
             return response()->json([
                 'message' => 'Something went wrong',
@@ -64,8 +72,10 @@ class PurchaseOrderController extends Controller
     {
         try {
 
+            $order = $this->purchaseOrderService->show($purchaseOrder);
+
             return response()->json([
-                'order' => $this->purchaseOrderService->show($purchaseOrder),
+                'order' => new PurchaseOrderResource($order),
             ]);
 
         } catch (\Exception $e) {
@@ -82,23 +92,31 @@ class PurchaseOrderController extends Controller
     {
         try {
 
+            DB::beginTransaction();
+
+
             $order = $this->purchaseOrderService->receive(
                 $purchaseOrder,
                 $request->user()
             );
 
+            DB::commit();
+
             return response()->json([
                 'message' => 'Purchase order received and stock updated successfully',
-                'order' => $order,
+                'order' => new PurchaseOrderResource($order),
             ]);
 
         } catch (\InvalidArgumentException $e) {
+
+            DB::rollBack();
 
         return response()->json([
             'message' => $e->getMessage(),
         ], 422);
 
         } catch (\Exception $e) {
+            DB::rollBack();
 
             return response()->json([
                 'message' => 'Something went wrong',
@@ -116,7 +134,7 @@ class PurchaseOrderController extends Controller
 
             return response()->json([
                 'message' => 'Purchase order cancelled successfully',
-                'order' => $order,
+                'order' => new PurchaseOrderResource($order),
             ]);
 
         } catch (\InvalidArgumentException $e) {

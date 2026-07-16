@@ -23,9 +23,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'categories*',
             'suppliers*',
             'products*',
+            'reports*',
 
-            'stocks/in',
-            'stocks/out',
+            'products/stock-out',
 
             'purchase-orders*',
         ]);

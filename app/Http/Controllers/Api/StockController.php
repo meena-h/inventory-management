@@ -7,6 +7,7 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use App\Http\Requests\StockTransactionRequest;
 use App\Services\StockService;
+use Illuminate\Support\Facades\DB;
 
 class StockController extends Controller
 {
@@ -77,10 +78,14 @@ public function stockOut(StockTransactionRequest $request)
 {
     try {
 
+        DB::beginTransaction();
+
         $result = $this->stockService->stockOut(
             $request->validated(),
             $request->user()
         );
+
+        DB::commit();
 
         return response()->json([
             'message' => 'Stock out recorded successfully',
@@ -95,7 +100,7 @@ public function stockOut(StockTransactionRequest $request)
         ], 422);
 
         } catch (\Exception $e) {
-
+            DB::rollBack();
             return response()->json([
                 'message' => 'Something went wrong',
                 'error'   => $e->getMessage(),

@@ -4,8 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Supplier;
-use App\Http\Requests\StoreSupplierRequest;
-use App\Http\Requests\UpdateSupplierRequest;
+use App\Http\Requests\SupplierRequest;
 use Illuminate\Support\Facades\DB;
 
 class SupplierController extends Controller
@@ -30,7 +29,7 @@ class SupplierController extends Controller
     }
 
     // POST /api/suppliers
-    public function store(StoreSupplierRequest $request)
+    public function store(SupplierRequest $request)
     {
         $validated = $request->validated();
 
@@ -68,7 +67,7 @@ class SupplierController extends Controller
     }
 
     // PUT /api/suppliers/{id}
-    public function update(UpdateSupplierRequest $request, Supplier $supplier)
+    public function update(SupplierRequest $request, Supplier $supplier)
     {
         $validated = $request->validated();
 
@@ -94,30 +93,29 @@ class SupplierController extends Controller
     {
         try {
 
-            $supplier->delete();
-
-            return response()->json([
-                'message' => 'Supplier deleted successfully'
-            ]);
-
-        } catch (\Illuminate\Database\QueryException $e) {
-
-            if ($e->getCode() === '23000') {
+            if ($supplier->purchaseOrders()->exists()) {
                 return response()->json([
                     'message' => 'This supplier cannot be deleted because it is linked to existing purchase orders.',
                 ], 409);
             }
 
+            if ($supplier->products()->exists()) {
+                return response()->json([
+                    'message' => 'This supplier cannot be deleted because it is linked to existing products.',
+                ], 409);
+            }
+
+            $supplier->delete();
+
             return response()->json([
-                'message' => 'Something went wrong',
-                'error'   => $e->getMessage(),
-            ], 500);
+                'message' => 'Supplier deleted successfully',
+            ]);
 
         } catch (\Exception $e) {
 
             return response()->json([
                 'message' => 'Something went wrong',
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ], 500);
         }
     }

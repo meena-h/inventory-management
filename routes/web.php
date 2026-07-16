@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\StockController;
 use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\PurchaseOrderController;
+use App\Http\Controllers\Api\ReportController;
 
 // Authentication
 Route::post('/register', [AuthController::class, 'register']);
@@ -40,5 +41,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/purchase-orders', [PurchaseOrderController::class, 'store']);
         Route::put('/purchase-orders/{purchaseOrder}/receive', [PurchaseOrderController::class, 'receive']);
         Route::put('/purchase-orders/{purchaseOrder}/cancel', [PurchaseOrderController::class, 'cancel']);
+     
+        // Reports
+        Route::get('/reports/master', [ReportController::class, 'master']);
+        Route::get('/reports/stock-movements', [ReportController::class, 'stockMovements']);
+        Route::get('/reports/stock-at-date', [ReportController::class, 'stockAtDate']);
     });
 });

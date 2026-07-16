@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\PurchaseOrderProduct;
 
 class Product extends Model
 {
@@ -15,7 +16,7 @@ class Product extends Model
         'category_id',
         'product_code',
         'name',
-        'slug',
+        'key',
         'description',
         'sku',
         'unit',
@@ -63,6 +64,12 @@ class Product extends Model
     public function stockTransactions()
     {
         return $this->hasMany(StockTransaction::class);
+    }
+
+    // Has many purchase order items
+    public function purchaseOrderProducts()
+    {
+        return $this->hasMany(PurchaseOrderProduct::class);
     }
 
 }

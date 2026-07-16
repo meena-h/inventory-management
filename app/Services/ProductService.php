@@ -63,10 +63,12 @@ class ProductService
 
         try {
 
-            DB::beginTransaction();
+            $validated['key'] = Str::slug($validated['name']);
 
-            if (isset($validated['name'])) {
-                $validated['slug'] = Str::slug($validated['name']);
+            $productExists = Product::where('key', $validated['key'])->exists();
+
+            if ($productExists) {
+                throw new \Exception('Product already exists.');
             }
 
             $product = Product::create($validated);
@@ -75,14 +77,9 @@ class ProductService
                 $product->suppliers()->attach($validated['supplier_ids']);
             }
 
-            DB::commit();
-
             return $product->load(['category', 'suppliers']);
 
         } catch (\Exception $e) {
-
-            DB::rollBack();
-
             throw $e;
         }
     }
@@ -96,41 +93,50 @@ class ProductService
     {
 
         try {
+            if (array_key_exists('name', $validated)) {
 
-            DB::beginTransaction();
+                $validated['key'] = Str::slug($validated['name']);
 
-            if (isset($validated['name'])) {
-                $validated['slug'] = Str::slug($validated['name']);
+                $productExists = Product::where('key', $validated['key'])
+                    ->where('id', '!=', $product->id)
+                    ->exists();
+
+                if ($productExists) {
+                    throw new \Exception('Product already exists.');
+                }
             }
 
             $product->update($validated);
 
-            if (isset($validated['supplier_ids'])) {
+            if (array_key_exists('supplier_ids', $validated)) {
                 $product->suppliers()->sync($validated['supplier_ids']);
             }
-
-            DB::commit();
 
             return $product->load(['category', 'suppliers']);
 
         } catch (\Exception $e) {
-
-            DB::rollBack();
-
             throw $e;
         }
     }
 
     public function destroy(Product $product)
     {
-
         try {
+
+            if ($product->stockTransactions()->exists()) {
+                throw new \Exception(
+                    'This product cannot be deleted because it is linked to existing stock records. Please remove the related records first.'
+                );
+            }
+
+            if ($product->purchaseOrderProducts()->exists()) {
+                throw new \Exception(
+                    'This product cannot be deleted because it is linked to purchase orders. Please remove the related records first.'
+                );
+            }
 
             $product->suppliers()->detach();
             $product->delete();
-
-        } catch (QueryException $e) {
-            throw $e;
 
         } catch (\Exception $e) {
             throw $e;

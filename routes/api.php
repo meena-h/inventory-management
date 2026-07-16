@@ -29,8 +29,3 @@ Route::get('/products/{product}/transactions', [StockController::class, 'history
 // Purchase Orders
 Route::get('/purchase-orders', [PurchaseOrderController::class, 'index']);
 Route::get('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'show']);
-
-// Reports
-Route::get('/reports/master', [ReportController::class, 'master']);
-Route::get('/reports/stock-movements', [ReportController::class, 'stockMovements']);
-Route::get('/reports/stock-at-date', [ReportController::class, 'stockAtDate']);

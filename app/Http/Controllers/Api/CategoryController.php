@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
-use App\Http\Requests\StoreCategoryRequest;
-use App\Http\Requests\UpdateCategoryRequest;
+use App\Http\Requests\CategoryRequest;
+use App\Http\Resources\CategoryResource;
 
 class CategoryController extends Controller
 {
@@ -16,8 +16,8 @@ class CategoryController extends Controller
             $categories = Category::latest()->get();
 
             return response()->json([
-                'total'      => $categories->count(),
-                'categories' => $categories,
+                'total' => $categories->count(),
+                'categories' => CategoryResource::collection($categories),
             ]);
 
         } catch (\Exception $e) {
@@ -29,7 +29,7 @@ class CategoryController extends Controller
     }
 
     // POST /api/categories
-    public function store(StoreCategoryRequest $request)
+    public function store(CategoryRequest $request)
     {
         $validated = $request->validated();
 
@@ -38,7 +38,7 @@ class CategoryController extends Controller
 
             return response()->json([
                 'message'  => 'Category created successfully',
-                'category' => $category,
+                'category' => new CategoryResource($category),
             ], 201);
 
         } catch (\Exception $e) {
@@ -53,9 +53,8 @@ class CategoryController extends Controller
         public function show(Category $category)
     {
         try {
-            return response()->json([
-                'category' => $category,
-            ]);
+            
+            return new CategoryResource($category);
 
         } catch (\Exception $e) {
             return response()->json([
@@ -66,7 +65,7 @@ class CategoryController extends Controller
     }
 
     // PUT /api/categories/{id}
-    public function update(UpdateCategoryRequest $request, Category $category)
+    public function update(CategoryRequest $request, Category $category)
     {
 
         $validated = $request->validated();
@@ -76,7 +75,7 @@ class CategoryController extends Controller
 
             return response()->json([
                 'message'  => 'Category updated successfully',
-                'category' => $category,
+                'category' => new CategoryResource($category),
             ]);
 
         } catch (\Exception $e) {
@@ -91,22 +90,18 @@ class CategoryController extends Controller
     public function destroy(Category $category)
     {
         try {
-            $category->delete();
 
-            return response()->json(['message' => 'Category deleted successfully']);
-
-        } catch (\Illuminate\Database\QueryException $e) {
-            if ($e->getCode() === '23000') {
+            if ($category->products()->exists()) {
                 return response()->json([
                     'message' => 'This category cannot be deleted because it has products linked to it. Please remove or reassign the products first.',
                 ], 409);
             }
 
-            return response()->json([
-                'message' => 'Something went wrong',
-                'error'   => $e->getMessage(),
-            ], 500);
+            $category->delete();
 
+            return response()->json([
+                'message' => 'Category deleted successfully',
+            ]);
 
         } catch (\Exception $e) {
 

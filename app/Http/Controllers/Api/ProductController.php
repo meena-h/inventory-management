@@ -4,11 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
-use App\Http\Requests\StoreProductRequest;
-use App\Http\Requests\UpdateProductRequest;
+use App\Http\Requests\ProductRequest;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
-use Illuminate\Database\QueryException;
+use App\Http\Resources\ProductResource;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
@@ -27,9 +27,20 @@ class ProductController extends Controller
     {
         try {
 
-            return response()->json(
-                $this->productService->index($request)
-            );
+            $data = $this->productService->index($request);
+
+            if (isset($data['products'])) {
+                $data['products'] = ProductResource::collection($data['products']);
+            }
+
+            if (isset($data['categories'])) {
+                $data['categories'] = collect($data['categories'])->map(function ($category) {
+                    $category['products'] = ProductResource::collection($category['products']);
+                    return $category;
+                });
+            }
+
+            return response()->json($data);
 
         } catch (\Exception $e) {
 
@@ -41,21 +52,24 @@ class ProductController extends Controller
     }
 
     // POST /api/products
-    public function store(StoreProductRequest $request)
+    public function store(ProductRequest $request)
     {
         try {
+            DB::beginTransaction();
 
             $product = $this->productService->store(
                 $request->validated()
             );
 
+            DB::commit();
+
             return response()->json([
                 'message' => 'Product created successfully',
-                'product' => $product,
+                'product' => new ProductResource($product),
             ], 201);
 
         } catch (\Exception $e) {
-
+            DB::rollBack();
             return response()->json([
                 'message' => 'Something went wrong',
                 'error' => $e->getMessage(),
@@ -69,7 +83,9 @@ class ProductController extends Controller
         try {
 
             return response()->json([
-                'product' => $this->productService->show($product),
+                'product' => new ProductResource(
+                    $this->productService->show($product)
+                ),
             ]);
 
         } catch (\Exception $e) {
@@ -82,21 +98,27 @@ class ProductController extends Controller
     }
 
     // PUT /api/products/{id}
-    public function update(UpdateProductRequest $request, Product $product)
+    public function update(ProductRequest $request, Product $product)
     {
         try {
+
+            DB::beginTransaction();
 
             $product = $this->productService->update(
                 $product,
                 $request->validated()
             );
 
+            DB::commit();
+
             return response()->json([
                 'message' => 'Product updated successfully',
-                'product' => $product,
+                'product' => new ProductResource($product),
             ]);
 
         } catch (\Exception $e) {
+
+            DB::rollBack();
 
             return response()->json([
                 'message' => 'Something went wrong',
@@ -110,32 +132,23 @@ class ProductController extends Controller
     {
         try {
 
+            DB::beginTransaction();
+
             $this->productService->destroy($product);
+
+            DB::commit();
 
             return response()->json([
                 'message' => 'Product deleted successfully',
             ]);
 
-        } catch (QueryException $e) {
-
-            if ($e->getCode() === '23000') {
-
-                return response()->json([
-                    'message' => 'This product cannot be deleted because it is linked to existing stock or order records. Please remove the related records first.',
-                ], 409);
-            }
-
-            return response()->json([
-                'message' => 'Something went wrong',
-                'error' => $e->getMessage(),
-            ], 500);
-
         } catch (\Exception $e) {
+   
+            DB::rollBack();
 
             return response()->json([
-                'message' => 'Something went wrong',
-                'error' => $e->getMessage(),
-            ], 500);
+                'message' => $e->getMessage(),
+            ], 409);
         }
     }
 }

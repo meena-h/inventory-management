@@ -29,7 +29,6 @@ class PurchaseOrderService
      */
     public function store(array $validated, User $user)
     {
-        DB::beginTransaction();
 
         try {
 
@@ -50,8 +49,6 @@ class PurchaseOrderService
                 $purchaseOrder->products()->create($item);
             }
 
-            DB::commit();
-
             return $purchaseOrder->load([
                 'supplier:id,supplier_code,name',
                 'user:id,name',
@@ -59,8 +56,6 @@ class PurchaseOrderService
             ]);
 
         } catch (\Exception $e) {
-
-            DB::rollBack();
 
             throw $e;
         }
@@ -93,8 +88,6 @@ class PurchaseOrderService
             throw new \Exception('Cannot receive a cancelled order.');
         }
 
-        DB::beginTransaction();
-
         try {
 
             $purchaseOrder->update([
@@ -116,8 +109,6 @@ class PurchaseOrderService
                 $item->product->increment('current_stock', $item->quantity);
             }
 
-            DB::commit();
-
             return $purchaseOrder->load([
                 'supplier:id,supplier_code,name',
                 'user:id,name',
@@ -126,7 +117,6 @@ class PurchaseOrderService
 
         } catch (\Exception $e) {
 
-            DB::rollBack();
 
             throw $e;
         }

@@ -90,7 +90,6 @@ class StockService
      */
     public function stockOut(array $validated, User $user)
     {
-        DB::beginTransaction();
 
         try {
 
@@ -111,17 +110,12 @@ class StockService
 
             $product->decrement('current_stock', $validated['quantity']);
 
-            DB::commit();
-
             return [
                 'transaction' => $transaction->load('product', 'user'),
                 'current_stock' => $product->fresh()->current_stock,
             ];
 
         } catch (\Exception $e) {
-
-            DB::rollBack();
-
             throw $e;
         }
     }

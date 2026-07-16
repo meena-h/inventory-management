@@ -8,6 +8,7 @@ use App\Models\StockTransaction;
 use Illuminate\Http\Request;
 use App\Enums\StockTransactionType;
 use Illuminate\Validation\Rules\Enum;
+use App\Http\Resources\ReportResource;
 
 class ReportController extends Controller
 {
@@ -19,27 +20,11 @@ class ReportController extends Controller
             $products = Product::with([
                 'category:id,name',
                 'suppliers:id,name',
-                'currentStock',
-            ])->get()->map(function ($product) {
-                return [
-                    'product_id'          => $product->id,
-                    'product_code'        => $product->product_code,
-                    'name'                => $product->name,
-                    'sku'                 => $product->sku,
-                    'unit'                => $product->unit,
-                    'price'               => $product->price,
-                    'category'            => $product->category->name ?? '-',
-                    'suppliers'           => $product->suppliers->pluck('name'),
-                    'current_stock'       => $product->currentStock->current_stock ?? 0,
-                    'low_stock_threshold' => $product->low_stock_threshold,
-                    'is_low_stock'        => ($product->currentStock->current_stock ?? 0) <= $product->low_stock_threshold,
-                    'is_active'           => $product->is_active,
-                ];
-            });
+            ])->get();
 
             return response()->json([
-                'total'    => $products->count(),
-                'products' => $products,
+                'total' => $products->count(),
+                'products' => ReportResource::collection($products),
             ]);
 
         } catch (\Exception $e) {
@@ -105,7 +90,7 @@ class ReportController extends Controller
                 'per_page'     => $transactions->perPage(),
                 'current_page' => $transactions->currentPage(),
                 'last_page'    => $transactions->lastPage(),
-                'transactions' => $transactions->items(),
+                'transactions' => ReportResource::collection($transactions->getCollection()),
             ]);
 
         } catch (\Exception $e) {
