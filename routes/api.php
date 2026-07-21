@@ -29,3 +29,6 @@ Route::get('/products/{product}/transactions', [StockController::class, 'history
 // Purchase Orders
 Route::get('/purchase-orders', [PurchaseOrderController::class, 'index']);
 Route::get('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'show']);
+
+//Download Purchase Order PDF
+Route::get('/purchase-orders/{purchaseOrder}/pdf', [PurchaseOrderController::class, 'downloadPdf']);

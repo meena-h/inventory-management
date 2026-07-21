@@ -9,11 +9,13 @@ use App\Http\Requests\StorePurchaseOrderRequest;
 use App\Services\PurchaseOrderService;
 use App\Http\Resources\PurchaseOrderResource;
 use Illuminate\Support\Facades\DB;
+use App\Services\Pdf\PurchaseOrderPdfService;
 
 class PurchaseOrderController extends Controller
 {
     public function __construct(
-    protected PurchaseOrderService $purchaseOrderService
+    protected PurchaseOrderService $purchaseOrderService,
+    protected PurchaseOrderPdfService $purchaseOrderPdfService,
     ) {}
 
     // GET /api/purchase-orders
@@ -34,6 +36,24 @@ class PurchaseOrderController extends Controller
                 'message' => 'Something went wrong',
                 'error' => $e->getMessage(),
             ],500);
+        }
+    }
+
+    public function downloadPdf(PurchaseOrder $purchaseOrder)
+    {
+        try {
+            $pdfContent = $this->purchaseOrderPdfService->generate($purchaseOrder);
+
+            return response($pdfContent, 200, [
+                'Content-Type'        => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="PO-' . $purchaseOrder->order_code . '.pdf"',
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Something went wrong',
+                'error'   => $e->getMessage(),
+            ], 500);
         }
     }
 
