@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\SupplierController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\PurchaseOrderController;
 use App\Http\Controllers\Api\ReportController;  
+use App\Http\Controllers\Api\ReportExportController;
 
 // Categories
 Route::get('/categories', [CategoryController::class, 'index']);
@@ -32,3 +33,6 @@ Route::get('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 
 
 //Download Purchase Order PDF
 Route::get('/purchase-orders/{purchaseOrder}/pdf', [PurchaseOrderController::class, 'downloadPdf']);
+
+//Product Master Details Excel Report 
+Route::get('/reports/product-master/export', [ReportExportController::class, 'productMaster']); 
