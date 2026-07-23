@@ -12,20 +12,18 @@ class ProductMasterReportService
         return Product::query()
             ->with(['category:id,name'])
             ->when(
-                isset($filters['price_min']),
-                fn (Builder $q) => $q->where('price', '>=', $filters['price_min'])
+                isset($filters['price']) && is_array($filters['price']),
+                fn (Builder $q) => $q->whereBetween('price', [
+                    $filters['price'][0],
+                    $filters['price'][1],
+                ])
             )
             ->when(
-                isset($filters['price_max']),
-                fn (Builder $q) => $q->where('price', '<=', $filters['price_max'])
-            )
-            ->when(
-                isset($filters['quantity_min']),
-                fn (Builder $q) => $q->where('current_stock', '>=', $filters['quantity_min'])
-            )
-            ->when(
-                isset($filters['quantity_max']),
-                fn (Builder $q) => $q->where('current_stock', '<=', $filters['quantity_max'])
+                isset($filters['quantity']) && is_array($filters['quantity']),
+                fn (Builder $q) => $q->whereBetween('current_stock', [
+                    $filters['quantity'][0],
+                    $filters['quantity'][1],
+                ])
             )
             ->when(
                 isset($filters['is_active']),

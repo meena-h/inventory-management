@@ -31,9 +31,9 @@ Route::get('/products/{product}/transactions', [StockController::class, 'history
 Route::get('/purchase-orders', [PurchaseOrderController::class, 'index']);
 Route::get('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'show']);
 
-//Download Purchase Order PDF
-Route::get('/purchase-orders/{purchaseOrder}/pdf', [PurchaseOrderController::class, 'downloadPdf']);
-
 //Product Master Details Excel Report 
+Route::get('/reports/product-master/export', [ReportExportController::class, 'productMaster']);
+
+//Download Purchase Order PDF
 Route::get('/purchase-orders/{purchaseOrder}/pdf/fpdf', [PurchaseOrderController::class, 'downloadFpdf']);
 Route::get('/purchase-orders/{purchaseOrder}/pdf/dompdf', [PurchaseOrderController::class, 'downloadDomPdf']);

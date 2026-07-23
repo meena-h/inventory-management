@@ -8,17 +8,21 @@ class ProductMasterReportRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; 
+        return true;
     }
 
     public function rules(): array
     {
         return [
-            'price_min'    => 'sometimes|nullable|numeric|min:0',
-            'price_max'    => 'sometimes|nullable|numeric|min:0|gte:price_min',
-            'quantity_min' => 'sometimes|nullable|integer|min:0',
-            'quantity_max' => 'sometimes|nullable|integer|min:0|gte:quantity_min',
-            'is_active'    => 'sometimes|nullable|boolean',
+            'price'             => 'sometimes|nullable|array|size:2',
+            'price.0'           => 'required_with:price|numeric|min:0',
+            'price.1'           => 'required_with:price|numeric|min:0|gte:price.0',
+
+            'quantity'          => 'sometimes|nullable|array|size:2',
+            'quantity.0'        => 'required_with:quantity|integer|min:0',
+            'quantity.1'        => 'required_with:quantity|integer|min:0|gte:quantity.0',
+
+            'is_active'         => 'sometimes|nullable|boolean',
         ];
     }
 }

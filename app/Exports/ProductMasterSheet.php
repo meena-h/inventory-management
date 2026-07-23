@@ -2,21 +2,20 @@
 
 namespace App\Exports;
 
-use App\Services\Reports\ProductMasterReportService;
+use Illuminate\Database\Eloquent\Builder;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Concerns\WithColumnFormatting;
-use Maatwebsite\Excel\Excel;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
 
-class ProductMasterSheetExport implements FromQuery, WithHeadings, WithMapping, WithTitle
+class ProductMasterSheet implements FromQuery, WithHeadings, WithMapping, WithTitle, WithColumnWidths
 {
-    public function __construct(protected array $filters = []) {}
+    public function __construct(protected Builder $query) {}
 
     public function query()
     {
-        return app(ProductMasterReportService::class)->query($this->filters);
+        return $this->query;
     }
 
     public function headings(): array
@@ -31,7 +30,6 @@ class ProductMasterSheetExport implements FromQuery, WithHeadings, WithMapping, 
             'Current Stock',
             'Low Stock Threshold',
             'Status',
-            'Updated At',
         ];
     }
 
@@ -47,12 +45,26 @@ class ProductMasterSheetExport implements FromQuery, WithHeadings, WithMapping, 
             $product->current_stock,
             $product->low_stock_threshold,
             $product->is_active ? 'Active' : 'Inactive',
-            $product->updated_at->format('Y-m-d H:i:s'),
         ];
     }
 
     public function title(): string
     {
         return 'Product Master Report';
+    }
+
+    public function columnWidths(): array
+    {
+        return [
+            'A' => 15,
+            'B' => 25,
+            'C' => 15,
+            'D' => 18,
+            'E' => 10,
+            'F' => 12,
+            'G' => 15,
+            'H' => 20,
+            'I' => 12,
+        ];
     }
 }
