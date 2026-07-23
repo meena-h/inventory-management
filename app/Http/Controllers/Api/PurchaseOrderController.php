@@ -9,13 +9,15 @@ use App\Http\Requests\StorePurchaseOrderRequest;
 use App\Services\PurchaseOrderService;
 use App\Http\Resources\PurchaseOrderResource;
 use Illuminate\Support\Facades\DB;
-use App\Services\Pdf\PurchaseOrderPdfService;
+use App\Services\Pdf\Fpdf\PurchaseOrderFpdfService;
+use App\Services\Pdf\DomPdf\PurchaseOrderDomPdfService;
 
 class PurchaseOrderController extends Controller
 {
     public function __construct(
-    protected PurchaseOrderService $purchaseOrderService,
-    protected PurchaseOrderPdfService $purchaseOrderPdfService,
+        protected PurchaseOrderService $purchaseOrderService,
+        protected PurchaseOrderFpdfService $fpdfService,
+        protected PurchaseOrderDomPdfService $domPdfService,
     ) {}
 
     // GET /api/purchase-orders
@@ -39,21 +41,35 @@ class PurchaseOrderController extends Controller
         }
     }
 
-    public function downloadPdf(PurchaseOrder $purchaseOrder)
+    // GET /api/purchase-orders/{id}/pdf/fpdf
+    public function downloadFpdf(PurchaseOrder $purchaseOrder)
     {
         try {
-            $pdfContent = $this->purchaseOrderPdfService->generate($purchaseOrder);
+            $pdfContent = $this->fpdfService->generate($purchaseOrder);
 
             return response($pdfContent, 200, [
                 'Content-Type'        => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="PO-' . $purchaseOrder->order_code . '.pdf"',
+                'Content-Disposition' => 'attachment; filename="PO-' . $purchaseOrder->order_code . '-fpdf.pdf"',
             ]);
-
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Something went wrong',
-                'error'   => $e->getMessage(),
-            ], 500);
+            return response()->json(['message' => 'Something went wrong', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+
+
+    // GET /api/purchase-orders/{id}/pdf/dompdf
+    public function downloadDomPdf(PurchaseOrder $purchaseOrder)
+    {
+        try {
+            $pdfContent = $this->domPdfService->generate($purchaseOrder);
+
+            return response($pdfContent, 200, [
+                'Content-Type'        => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="PO-' . $purchaseOrder->order_code . '-dompdf.pdf"',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Something went wrong', 'error' => $e->getMessage()], 500);
         }
     }
 

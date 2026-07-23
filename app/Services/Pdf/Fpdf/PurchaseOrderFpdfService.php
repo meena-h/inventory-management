@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Services\Pdf;
+namespace App\Services\Pdf\Fpdf;
 
 use App\Models\PurchaseOrder;
 
-class PurchaseOrderPdfService
+class PurchaseOrderFpdfService
 {
     public function generate(PurchaseOrder $purchaseOrder): string
     {

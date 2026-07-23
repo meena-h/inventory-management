@@ -35,4 +35,5 @@ Route::get('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 
 Route::get('/purchase-orders/{purchaseOrder}/pdf', [PurchaseOrderController::class, 'downloadPdf']);
 
 //Product Master Details Excel Report 
-Route::get('/reports/product-master/export', [ReportExportController::class, 'productMaster']); 
+Route::get('/purchase-orders/{purchaseOrder}/pdf/fpdf', [PurchaseOrderController::class, 'downloadFpdf']);
+Route::get('/purchase-orders/{purchaseOrder}/pdf/dompdf', [PurchaseOrderController::class, 'downloadDomPdf']);
